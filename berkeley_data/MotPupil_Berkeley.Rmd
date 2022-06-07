@@ -1,0 +1,65 @@
+---
+title: "Data wrangling_Berkeley dataset"
+author: "Jadyn Park"
+date: '2022-06-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+## clear environment
+rm(list = ls())
+
+## load libraries
+library(tidyverse); library(dplyr); library(readr)
+
+## set working directory
+setwd("~/Desktop/Uchicago/MotPupil/")
+
+raw <- list.files(path="~/Desktop/Uchicago/MotPupil/", full.names=T) %>%
+  lapply(read_csv) %>%
+  bind_rows
+
+## extract first 4800 rows
+# raw <- raw[1:4800,]
+```
+
+```{r echo=T}
+## add subject number
+df <- raw
+
+df$rownum <- seq.int(nrow(df))
+
+df$subj_idx <- ifelse(df$rownum < 601, "1001",
+                             ifelse(df$rownum > 600 & df$rownum < 1201, "1002",
+                                    ifelse(df$rownum > 1200 & df$rownum < 1801, "1003",
+                                           ifelse(df$rownum > 1800 & df$rownum < 2401, "1004",
+                                                  ifelse(df$rownum > 2400 & df$rownum < 3001, "1005",
+                                                         ifelse(df$rownum > 3000 & df$rownum < 3601, "1006",
+                                                                ifelse(df$rownum > 3600 & df$rownum < 4201, "1007",
+                                                                       ifelse(df$rownum > 4200, "1008", "NA"))))))))
+
+## remove rows where rt is NA
+df <- df %>% drop_na(rt)
+
+## select relevant columns
+df <- df %>% select(subj_idx, scene_proportion, choice, rt, Mot_type)
+
+## mutate scene_proportion as stim, such that 0.33 = -1.5; 0.43 = -0.5; 0.48 = 0; 0.53 = 0.5; 0.63 = 1.5
+df <- df %>% mutate(stim = factor(scene_proportion, levels=c(.33, .43, .48, .53, .63),
+                                  labels=c(-1.5, -.5, 0, .5, 1.5)))
+  
+  
+## mutate choice as response such that Face = 0, Scene = 1
+df <- df %>% mutate(response = factor(choice, levels=c("Scene", "Face"),
+                                      labels=c(1, 0)))
+
+## mutate Mot_type as condition such that Scene = 1, Face = -1, No = 0
+df <- df %>% mutate(condition = factor(Mot_type, levels=c("Scene", "Face", "No"),
+                                      labels=c(1, -1, 0)))
+
+## select final variables
+df <- df %>% select(subj_idx, stim, response, rt, condition)
+
+write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned.csv")
+```
