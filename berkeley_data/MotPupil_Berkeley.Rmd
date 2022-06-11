@@ -11,17 +11,15 @@ output: html_document
 rm(list = ls())
 
 ## load libraries
-library(tidyverse); library(dplyr); library(readr)
+library(tidyverse); library(dplyr); library(readr); library(purrr)
 
 ## set working directory
 setwd("~/Desktop/Uchicago/MotPupil/")
 
-raw <- list.files(path="~/Desktop/Uchicago/MotPupil/", full.names=T) %>%
-  lapply(read_csv) %>%
-  bind_rows
-
-## extract first 4800 rows
-# raw <- raw[1:4800,]
+raw <- list.files(path = "~/Desktop/Uchicago/MotPupil/",    
+                       pattern = "*.csv", full.names = TRUE) %>% 
+  lapply(read_csv) %>%                                           
+  bind_rows 
 ```
 
 ```{r echo=T}
@@ -41,6 +39,9 @@ df$subj_idx <- ifelse(df$rownum < 601, "1001",
 
 ## remove rows where rt is NA
 df <- df %>% drop_na(rt)
+
+## sort rows by trial_order
+df <- df %>% arrange(subj_idx, trial_order)
 
 ## select relevant columns
 df <- df %>% select(subj_idx, scene_proportion, choice, rt, Mot_type)
