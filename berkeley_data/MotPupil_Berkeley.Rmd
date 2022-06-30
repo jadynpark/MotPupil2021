@@ -63,4 +63,18 @@ df <- df %>% mutate(condition = factor(Mot_type, levels=c("Scene", "Face", "No")
 df <- df %>% select(subj_idx, stim, response, rt, condition)
 
 write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned.csv")
+
+## add MotCon column
+df$MotCon <- ifelse(df$condition==1 & df$response==0 | df$condition==-1 & df$response==1, -1,
+                    ifelse(df$condition==1 & df$response==1 | df$condition==-1 & df$response==0, 1, 0))
+
+  # if condition = scene (1) & response = 0 -> MotCon = -1
+  # if condition = scene (1) & response = 1 -> MotCon = 1
+  # if condition = neutral (0) & response = 0 -> MotCon = 0
+  # if condition = neutral (0) & response = 1 -> MotCon = 0
+  # if condition = face (-1) & response = 0 -> MotCon = 1
+  # if condition = face (-1) & response = 1 -> MotCon = -1
+
+write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned_MotCon.csv")
+
 ```
