@@ -16,32 +16,37 @@ library(tidyverse); library(dplyr); library(readr); library(purrr)
 ## set working directory
 setwd("~/Desktop/Uchicago/MotPupil/")
 
-raw <- list.files(path = "~/Desktop/Uchicago/MotPupil/",    
-                       pattern = "*.csv", full.names = TRUE) %>% 
-  lapply(read_csv) %>%                                           
-  bind_rows 
+LC_1001 <- read.csv("~/Desktop/Uchicago/MotPupil/1001.csv")
+LC_1002 <- read.csv("~/Desktop/Uchicago/MotPupil/1002.csv")
+LC_1003 <- read.csv("~/Desktop/Uchicago/MotPupil/1003.csv")
+LC_1004 <- read.csv("~/Desktop/Uchicago/MotPupil/1004.csv")
+LC_1005 <- read.csv("~/Desktop/Uchicago/MotPupil/1005.csv")
+LC_1006 <- read.csv("~/Desktop/Uchicago/MotPupil/1006.csv")
+LC_1007 <- read.csv("~/Desktop/Uchicago/MotPupil/1007.csv")
+LC_1008 <- read.csv("~/Desktop/Uchicago/MotPupil/1008.csv")
+
+LC_1001$subj_idx <- "1001"
+LC_1002$subj_idx <- "1002"
+LC_1003$subj_idx <- "1003"
+LC_1004$subj_idx <- "1004"
+LC_1005$subj_idx <- "1005"
+LC_1006$subj_idx <- "1006"
+LC_1007$subj_idx <- "1007"
+LC_1008$subj_idx <- "1008"
+
+raw.list <- do.call("rbind", list(LC_1001, LC_1002, LC_1003, LC_1004, LC_1005, LC_1006, LC_1007, LC_1008))
+raw <- as.data.frame(raw.list)
 ```
 
 ```{r echo=T}
 ## add subject number
 df <- raw
 
-df$rownum <- seq.int(nrow(df))
-
-df$subj_idx <- ifelse(df$rownum < 601, "1001",
-                             ifelse(df$rownum > 600 & df$rownum < 1201, "1002",
-                                    ifelse(df$rownum > 1200 & df$rownum < 1801, "1003",
-                                           ifelse(df$rownum > 1800 & df$rownum < 2401, "1004",
-                                                  ifelse(df$rownum > 2400 & df$rownum < 3001, "1005",
-                                                         ifelse(df$rownum > 3000 & df$rownum < 3601, "1006",
-                                                                ifelse(df$rownum > 3600 & df$rownum < 4201, "1007",
-                                                                       ifelse(df$rownum > 4200, "1008", "NA"))))))))
+## sort rows by trial_order
+df <- df %>% arrange(subj_idx, trial_order)
 
 ## remove rows where rt is NA
 df <- df %>% drop_na(rt)
-
-## sort rows by trial_order
-df <- df %>% arrange(subj_idx, trial_order)
 
 ## select relevant columns
 df <- df %>% select(subj_idx, scene_proportion, choice, rt, Mot_type)
@@ -62,8 +67,6 @@ df <- df %>% mutate(condition = factor(Mot_type, levels=c("Scene", "Face", "No")
 ## select final variables
 df <- df %>% select(subj_idx, stim, response, rt, condition)
 
-write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned.csv")
-
 ## add MotCon column
 df$MotCon <- ifelse(df$condition==1 & df$response==0 | df$condition==-1 & df$response==1, -1,
                     ifelse(df$condition==1 & df$response==1 | df$condition==-1 & df$response==0, 1, 0))
@@ -75,6 +78,9 @@ df$MotCon <- ifelse(df$condition==1 & df$response==0 | df$condition==-1 & df$res
   # if condition = face (-1) & response = 0 -> MotCon = 1
   # if condition = face (-1) & response = 1 -> MotCon = -1
 
-write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned_MotCon.csv")
+write.csv(df, "~/Desktop/Uchicago/MotPupil/Berkeley_data_cleaned.csv")
 
+## exclude subject 1008
+df_1007 <- df %>% filter(subj_idx!="1008")
+write.csv(df_1007, "~/Desktop/Uchicago/MotPupil/Berkeley_data_1001-1007.csv")
 ```
